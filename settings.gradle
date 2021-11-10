@@ -1,1 +1,1 @@
-include ':sample', ':rainyview'
+include ':entry', ':rainyview'
