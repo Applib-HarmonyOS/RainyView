@@ -16,10 +16,12 @@ import ohos.app.Context;
 import ohos.eventhandler.EventHandler;
 import ohos.eventhandler.EventRunner;
 import com.hmos.compact.utils.AttrUtils;
+import java.security.SecureRandom;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.Random;
-import java.util.Stack;
+
 
 /**
  * Rainyview class.
@@ -80,10 +82,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
     private AnimatorValue mRightCloudAnimator;
 
-    private long mLeftCloudAnimatorPlayTime;
-
-    private long mRightCloudAnimatorPlayTime;
-
     //The max translation x when do animation.
     private float mMaxTranslationX;
 
@@ -105,10 +103,10 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     //help to record the removed drops, avoid "java.util.ConcurrentModificationException"
     private List<RainDrop> mRemovedRainDrops;
 
-    private Stack<RainDrop> mRecycler;
+    private Deque<RainDrop> mRecycler;
 
     //the only random object
-    private Random mOnlyRandom = new Random();
+    private SecureRandom mOnlyRandom = new SecureRandom();
 
     private EventHandler mHandler = new EventHandler(EventRunner.getMainEventRunner());
 
@@ -198,9 +196,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
             h = DEFAULT_SIZE;
         } else if (widthSpecMode == EstimateSpec.NOT_EXCEED) {
             w = DEFAULT_SIZE;
-            h = heightSpecSize;
         } else if (heightSpecMode == EstimateSpec.PRECISE) {
-            w = widthSpecSize;
             h = DEFAULT_SIZE;
         }
         setEstimatedSize(w, h);
@@ -251,7 +247,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
         mRainDrops = new ArrayList<>(mRainDropMaxNumber);
         mRemovedRainDrops = new ArrayList<>(mRainDropMaxNumber);
-        mRecycler = new Stack<>();
+        mRecycler = new ArrayDeque<>();
 
     }
 
@@ -262,8 +258,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         w = component.getWidth();
         int h;
         h = component.getHeight();
-        int oldweight = 0;
-        int oldheight = 0;
         stop();
 
         mLeftCloudPath.reset();
@@ -271,7 +265,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
         //view's center x coordinate
         float centerX;
-        centerX = w / 2;
+        centerX = w / 2.0f;
         //get the min size
         float minSize = Math.min(w, h);
         //************************compute left cloud**********************
@@ -287,7 +281,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         //the left cloud end x coordinate
         float leftCloudEndX = (w - leftCloudWidth - leftCloudWidth * CLOUD_SCALE_RATIO / 2) / 2 + leftCloudWidth;
         //clouds' end y coordinate
-        float leftCloudEndY = h / 3;
+        float leftCloudEndY = h / 3.0f;
         //add the bottom round rect
         mLeftCloudPath.addRoundRect(new RectFloat(leftCloudEndX - leftCloudWidth, leftCloudEndY - leftCloudBottomHeight,
                 leftCloudEndX, leftCloudEndY), leftCloudBottomHeight,
@@ -334,8 +328,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     }
 
     private void setupAnimator() {
-        mLeftCloudAnimatorPlayTime = 0;
-        mRightCloudAnimatorPlayTime = 0;
         mLeftCloudAnimator = new AnimatorValue();
         mLeftCloudAnimator.setLoopedCount(-1);
         mLeftCloudAnimator.setDuration(1000);
@@ -370,7 +362,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     public void onDraw(Component component, Canvas canvas) {
 
         canvas.save();
-        //canvas.drawRect(mRainRect, new Paint());
         canvas.clipRect(mRainClipRect);
         drawRainDrops(canvas);
         canvas.restore();
@@ -439,36 +430,108 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     }
 
     /**
-     * To optimize performance, use recycler {@link #mRecycler}.
-     * */
-    private RainDrop obtainRainDrop() {
-        if (mRecycler.isEmpty()) {
-            return new RainDrop();
-        }
-
-        return mRecycler.pop();
-    }
-
-    /**
-     * Recycling the drop that are no longer in use.
-     * */
-    private void recycle(RainDrop rainDrop) {
-        if (rainDrop == null) {
-            return;
-        }
-
-        if (mRecycler.size() >= mRainDropMaxNumber) {
-            mRecycler.pop();
-        }
-
-        mRecycler.push(rainDrop);
-    }
-
-    /**
      * The drop's handled task.
      * Call handler to schedule the task.
      * */
     private Runnable mTask = new Runnable() {
+
+        /**
+         * To optimize performance, use recycler .
+         * */
+        private RainDrop obtainRainDrop() {
+            if (mRecycler.isEmpty()) {
+                return new RainDrop();
+            }
+
+            return mRecycler.removeFirst();
+        }
+
+        /**
+         * Recycling the drop that are no longer in use.
+         * */
+        private void recycle(RainDrop rainDrop) {
+            if (rainDrop == null) {
+                return;
+            }
+
+            if (mRecycler.size() >= mRainDropMaxNumber) {
+                mRecycler.removeFirst(); //pop
+            }
+
+            mRecycler.push(rainDrop); //push
+        }
+
+
+        /**
+         * Now create a random raindrop.
+         * */
+        private void createRainDrop() {
+
+            if (mRainDrops.size() >= mRainDropMaxNumber || mRainRect.isEmpty()) {
+                return;
+            }
+
+            long current = System.currentTimeMillis();
+            if ((current - mRainDropCreationTime) < mRainDropCreationInterval) {
+                return;
+            }
+
+            if (mRainDropMinLength > mRainDropMaxLength || mRainDropMinSpeed > mRainDropMaxSpeed) {
+                throw new IllegalArgumentException("The minimum value cannot be greater than the maximum value.");
+            }
+
+            mRainDropCreationTime = current;
+
+            RainDrop rainDrop = obtainRainDrop();
+            rainDrop.slope = mRainDropSlope;
+            rainDrop.speedX = mRainDropMinSpeed + mOnlyRandom.nextFloat() * mRainDropMaxSpeed;
+            rainDrop.speedY = rainDrop.speedX * Math.abs(rainDrop.slope);
+
+            float rainDropLength = (float) mRainDropMinLength
+                    + mOnlyRandom.nextInt(mRainDropMaxLength - mRainDropMinLength);
+            double degree = Math.toDegrees(Math.atan(rainDrop.slope));
+
+            rainDrop.mxLength = (float) Math.abs(Math.cos(degree * Math.PI / 180) * rainDropLength);
+            rainDrop.myLength = (float) Math.abs(Math.sin(degree * Math.PI / 180) * rainDropLength);
+
+            //random x coordinate
+            rainDrop.mx = mRainRect.left + mOnlyRandom.nextInt((int) mRainRect.getWidth());
+            //the fixed y coordinate
+            rainDrop.my = mRainRect.top - rainDrop.myLength;
+
+            mRainDrops.add(rainDrop);
+
+        }
+
+        /**
+         * Update all the raindrops state.
+         * */
+        private void updateRainDropState() {
+            mRemovedRainDrops.clear();
+
+            for (RainDrop rainDrop : mRainDrops) {
+                if (rainDrop.my - rainDrop.myLength > mRainRect.bottom) {
+                    mRemovedRainDrops.add(rainDrop);
+                    recycle(rainDrop);
+                } else {
+                    if (rainDrop.slope >= 0) {
+                        rainDrop.mx += rainDrop.speedX;
+                    } else {
+                        rainDrop.mx -= rainDrop.speedX;
+                    }
+                    rainDrop.my += rainDrop.speedY;
+                }
+            }
+
+            if (!mRemovedRainDrops.isEmpty()) {
+                mRainDrops.removeAll(mRemovedRainDrops);
+            }
+
+            if (!mRainDrops.isEmpty()) {
+                invalidate();
+            }
+        }
+
         @Override
         public void run() {
             createRainDrop();
@@ -476,75 +539,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
             mHandler.postTask(this, 20);
         }
     };
-
-    /**
-     * Now create a random raindrop.
-     * */
-    private void createRainDrop() {
-
-        if (mRainDrops.size() >= mRainDropMaxNumber || mRainRect.isEmpty()) {
-            return;
-        }
-
-        long current = System.currentTimeMillis();
-        if ((current - mRainDropCreationTime) < mRainDropCreationInterval) {
-            return;
-        }
-
-        if (mRainDropMinLength > mRainDropMaxLength || mRainDropMinSpeed > mRainDropMaxSpeed) {
-            throw new IllegalArgumentException("The minimum value cannot be greater than the maximum value.");
-        }
-
-        mRainDropCreationTime = current;
-
-        RainDrop rainDrop = obtainRainDrop();
-        rainDrop.slope = mRainDropSlope;
-        rainDrop.speedX = mRainDropMinSpeed + mOnlyRandom.nextFloat() * mRainDropMaxSpeed;
-        rainDrop.speedY = rainDrop.speedX * Math.abs(rainDrop.slope);
-
-        float rainDropLength = mRainDropMinLength + mOnlyRandom.nextInt(mRainDropMaxLength - mRainDropMinLength);
-        double degree = Math.toDegrees(Math.atan(rainDrop.slope));
-
-        rainDrop.mxLength = (float) Math.abs(Math.cos(degree * Math.PI / 180) * rainDropLength);
-        rainDrop.myLength = (float) Math.abs(Math.sin(degree * Math.PI / 180) * rainDropLength);
-
-        //random x coordinate
-        rainDrop.mx = mRainRect.left + mOnlyRandom.nextInt((int) mRainRect.getWidth());
-        //the fixed y coordinate
-        rainDrop.my = mRainRect.top - rainDrop.myLength;
-
-        mRainDrops.add(rainDrop);
-
-    }
-
-    /**
-     * Update all the raindrops state.
-     * */
-    private void updateRainDropState() {
-        mRemovedRainDrops.clear();
-
-        for (RainDrop rainDrop : mRainDrops) {
-            if (rainDrop.my - rainDrop.myLength > mRainRect.bottom) {
-                mRemovedRainDrops.add(rainDrop);
-                recycle(rainDrop);
-            } else {
-                if (rainDrop.slope >= 0) {
-                    rainDrop.mx += rainDrop.speedX;
-                } else {
-                    rainDrop.mx -= rainDrop.speedX;
-                }
-                rainDrop.my += rainDrop.speedY;
-            }
-        }
-
-        if (!mRemovedRainDrops.isEmpty()) {
-            mRainDrops.removeAll(mRemovedRainDrops);
-        }
-
-        if (!mRainDrops.isEmpty()) {
-            invalidate();
-        }
-    }
 
     private void drawRainDrops(Canvas canvas) {
 
@@ -834,8 +828,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     }
 
     public static Color changeParamToColor(int color) {
-        Color hmosColor = new Color(color);
-        return hmosColor;
+        return new Color(color);
     }
 }
 

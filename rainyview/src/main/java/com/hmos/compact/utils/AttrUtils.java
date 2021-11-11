@@ -24,7 +24,10 @@ import ohos.hiviewdfx.HiLogLabel;
  * Attrutils class.
  */
 public class AttrUtils {
-    private static HiLogLabel hiLogLabel = new HiLogLabel(0,0,"attrutils");
+    private static HiLogLabel hiLogLabel = new HiLogLabel(0, 0, "attrutils");
+
+    private AttrUtils() {
+    }
 
     /**
      * Function to get int value from attribute.
@@ -42,7 +45,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getIntegerValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getIntFromAttr");
         }
         return value;
     }
@@ -63,7 +66,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getFloatValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getFloatFromAttr");
         }
         return value;
     }
@@ -84,7 +87,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getBoolValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getBooleanFromAttr");
         }
         return value;
     }
@@ -105,7 +108,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getLongValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getLongFromAttr");
         }
         return value;
     }
@@ -126,7 +129,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getColorValue().getValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getColorFromAttr");
         }
         return value;
     }
@@ -147,7 +150,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getDimensionValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getDimensionFromAttr");
         }
         return value;
     }
@@ -168,7 +171,7 @@ public class AttrUtils {
                 value = attrs.getAttr(name).get().getStringValue();
             }
         } catch (Exception e) {
-            HiLog.debug(hiLogLabel,"exception");
+            HiLog.debug(hiLogLabel, "exception in getStringFromAttr");
         }
         return value;
     }
