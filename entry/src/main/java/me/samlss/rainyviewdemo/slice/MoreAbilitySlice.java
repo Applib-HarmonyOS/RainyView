@@ -32,10 +32,7 @@ public class MoreAbilitySlice extends AbilitySlice {
     public void onStart(Intent intent) {
         super.onStart(intent);
         super.setUIContent(ResourceTable.Layout_ability_more);
-        RainyView rainyView1;
-        rainyView1 = (RainyView) findComponentById(ResourceTable.Id_fv1);
-        RainyView rainyView2;
-        rainyView2 = (RainyView) findComponentById(ResourceTable.Id_fv2);
+        RainyView rainyView1 = (RainyView) findComponentById(ResourceTable.Id_fv1);
         rainyView1.setLeftCloudColor(Color.getIntColor("#B7AC8D"));
         rainyView1.setRightCloudColor(Color.getIntColor("#9b8f84"));
         rainyView1.setRainDropColor(Color.getIntColor("#9aa9bb"));
@@ -48,6 +45,7 @@ public class MoreAbilitySlice extends AbilitySlice {
         rainyView1.setRainDropCreationInterval(10);
         Button start = (Button) findComponentById(ResourceTable.Id_next_start_button);
         Button stop = (Button) findComponentById(ResourceTable.Id_next_stop_button);
+        RainyView rainyView2 = (RainyView) findComponentById(ResourceTable.Id_fv2);
         start.setClickedListener(new Component.ClickedListener() {
             @Override
             public void onClick(Component component) {

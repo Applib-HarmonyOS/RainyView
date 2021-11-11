@@ -24,7 +24,7 @@ import ohos.hiviewdfx.HiLogLabel;
  * Attrutils class.
  */
 public class AttrUtils {
-    private static HiLogLabel hiLogLabel = new HiLogLabel(0, 0, "attrutils");
+    private static final HiLogLabel HILOG_LABEL = new HiLogLabel(0, 0, "attrutils");
 
     private AttrUtils() {
     }
@@ -44,8 +44,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getIntegerValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getIntFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getIntFromAttr");
         }
         return value;
     }
@@ -65,8 +65,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getFloatValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getFloatFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getFloatFromAttr");
         }
         return value;
     }
@@ -86,8 +86,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getBoolValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getBooleanFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getBooleanFromAttr");
         }
         return value;
     }
@@ -107,8 +107,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getLongValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getLongFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getLongFromAttr");
         }
         return value;
     }
@@ -128,8 +128,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getColorValue().getValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getColorFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getColorFromAttr");
         }
         return value;
     }
@@ -149,8 +149,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getDimensionValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getDimensionFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getDimensionFromAttr");
         }
         return value;
     }
@@ -170,8 +170,8 @@ public class AttrUtils {
             if (attrs.getAttr(name).isPresent() && attrs.getAttr(name).get() != null) {
                 value = attrs.getAttr(name).get().getStringValue();
             }
-        } catch (Exception e) {
-            HiLog.debug(hiLogLabel, "exception in getStringFromAttr");
+        } catch (Exception exception) {
+            HiLog.error(HILOG_LABEL, "exception in getStringFromAttr");
         }
         return value;
     }

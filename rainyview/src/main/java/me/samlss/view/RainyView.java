@@ -15,6 +15,8 @@ import ohos.agp.utils.RectFloat;
 import ohos.app.Context;
 import ohos.eventhandler.EventHandler;
 import ohos.eventhandler.EventRunner;
+import ohos.hiviewdfx.HiLog;
+import ohos.hiviewdfx.HiLogLabel;
 import com.hmos.compact.utils.AttrUtils;
 import java.security.SecureRandom;
 import java.util.ArrayDeque;
@@ -32,7 +34,7 @@ import java.util.List;
  * @description A rainy rainy rainy view. ( ˘•灬•˘ )
  */
 public class RainyView extends Component implements DrawTask, EstimateSizeListener, LayoutRefreshedListener {
-
+    private static final HiLogLabel HILOG_LABEL1 = new HiLogLabel(0, 0, "Rainyview");
     //the default size if set "wrap_content"
     private static final int DEFAULT_SIZE = 300;
     //Number of raindrops that can coexist at the same time
@@ -58,74 +60,46 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
     private Paint mLeftCloudPaint;
     private Paint mRightCloudPaint;
     private Paint mRainPaint;
-
     private int mLeftCloudColor = DEFAULT_LEFT_CLOUD_COLOR;
-
     private int mRightCloudColor = DEFAULT_RIGHT_CLOUD_COLOR;
-
     private int mRainColor = DEFAULT_RAIN_COLOR;
-
     //There are two clouds in this view, includes the left cloud & right cloud
     //the left cloud's path
     private Path mLeftCloudPath;
-
     //the right cloud's path
     private Path mRightCloudPath;
-
     //the rain rect
     private RectFloat mRainRect;
-
     //the rain clip rect
     private RectFloat mRainClipRect;
-
     private AnimatorValue mLeftCloudAnimator;
-
     private AnimatorValue mRightCloudAnimator;
-
     //The max translation x when do animation.
     private float mMaxTranslationX;
-
     //The left cloud animator value
     private float mLeftCloudAnimatorValue;
-
     //The right cloud animator value
     private float mRightCloudAnimatorValue;
-
     //The path for computing
     private Path mComputePath = new Path();
-
     //The matrix for computing
     private Matrix mComputeMatrix = new Matrix();
-
     //all the rain drops
     private List<RainDrop> mRainDrops;
-
     //help to record the removed drops, avoid "java.util.ConcurrentModificationException"
     private List<RainDrop> mRemovedRainDrops;
-
     private Deque<RainDrop> mRecycler;
-
     //the only random object
     private SecureRandom mOnlyRandom = new SecureRandom();
-
     private EventHandler mHandler = new EventHandler(EventRunner.getMainEventRunner());
-
     private int mRainDropMaxNumber = DEFAULT_DROP_MAX_NUMBER;
-
     private int mRainDropCreationInterval = DEFAULT_DROP_CREATION_INTERVAL;
-
     private int mRainDropMinLength = DEFAULT_DROP_MIN_LENGTH;
-
     private int mRainDropMaxLength = DEFAULT_DROP_MAX_LENGTH;
-
     private int mRainDropSize = DEFAULT_DROP_SIZE;
-
     private float mRainDropMaxSpeed = DEFAULT_DROP_MAX_SPEECH;
-
     private float mRainDropMinSpeed = DEFAULT_DROP_MIN_SPEECH;
-
     private float mRainDropSlope = DEFAULT_DROP_SLOPE;
-
     private long mRainDropCreationTime;
 
     /**
@@ -227,45 +201,32 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         Color hmosColor = RainyView.changeParamToColor(mLeftCloudColor);
         mLeftCloudPaint.setColor(hmosColor);
         mLeftCloudPaint.setStyle(Paint.Style.FILL_STYLE);
-
         mRightCloudPaint = new Paint();
         Color hmosColor1 = RainyView.changeParamToColor(mRightCloudColor);
         mRightCloudPaint.setColor(hmosColor1);
         mRightCloudPaint.setStyle(Paint.Style.FILL_STYLE);
-
         mRainPaint = new Paint();
         mRainPaint.setStrokeCap(Paint.StrokeCap.ROUND_CAP);
         Color hmosColor2 = RainyView.changeParamToColor(mRainColor);
         mRainPaint.setColor(hmosColor2);
         mRainPaint.setStyle(Paint.Style.STROKE_STYLE);
         mRainPaint.setStrokeWidth(mRainDropSize);
-
         mLeftCloudPath  = new Path();
         mRightCloudPath = new Path();
         mRainRect = new RectFloat();
         mRainClipRect = new RectFloat();
-
         mRainDrops = new ArrayList<>(mRainDropMaxNumber);
         mRemovedRainDrops = new ArrayList<>(mRainDropMaxNumber);
         mRecycler = new ArrayDeque<>();
-
     }
 
     @Override
     public void onRefreshed(Component component) {
-
-        int w;
-        w = component.getWidth();
-        int h;
-        h = component.getHeight();
         stop();
-
         mLeftCloudPath.reset();
         mRightCloudPath.reset();
-
-        //view's center x coordinate
-        float centerX;
-        centerX = w / 2.0f;
+        int w = component.getWidth();
+        int h = component.getHeight();
         //get the min size
         float minSize = Math.min(w, h);
         //************************compute left cloud**********************
@@ -286,32 +247,28 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         mLeftCloudPath.addRoundRect(new RectFloat(leftCloudEndX - leftCloudWidth, leftCloudEndY - leftCloudBottomHeight,
                 leftCloudEndX, leftCloudEndY), leftCloudBottomHeight,
                 leftCloudBottomRoundRadius, Path.Direction.CLOCK_WISE);
-
         float leftCloudTopCenterY = leftCloudEndY - leftCloudBottomHeight;
-
         float leftCloudRightTopCenterX = leftCloudEndX - leftCloudBottomRoundRadius;
-
         float leftCloudLeftTopCenterX  = leftCloudEndX - leftCloudWidth + leftCloudBottomRoundRadius;
-
-
         mLeftCloudPath.addCircle(leftCloudRightTopCenterX, leftCloudTopCenterY,
                 leftCloudBottomRoundRadius * 3 / 4, Path.Direction.CLOCK_WISE);
         mLeftCloudPath.addCircle(leftCloudLeftTopCenterX, leftCloudTopCenterY,
                 leftCloudBottomRoundRadius / 2, Path.Direction.CLOCK_WISE);
+
         //*******************************Done*****************************
         //************************compute right cloud**********************
         //The cloud on the right is CLOUD_SCALE_RATIO size of the left
-        //the right cloud center x
-        float rightCloudCenterX;
-        rightCloudCenterX = rightCloudTranslateX + centerX - leftCloudWidth / 2;
         RectFloat calculateRect = new RectFloat();
         //compute the left cloud's path bounds
         mLeftCloudPath.computeBounds(calculateRect);
         mComputeMatrix.reset();
         mComputeMatrix.preTranslate(rightCloudTranslateX, -calculateRect.getHeight() * (1 - CLOUD_SCALE_RATIO) / 2);
+        //view's center x coordinate
+        float centerX = w / 2.0f;
+        //the right cloud center x
+        float rightCloudCenterX = rightCloudTranslateX + centerX - leftCloudWidth / 2;
         mComputeMatrix.postScale(CLOUD_SCALE_RATIO, CLOUD_SCALE_RATIO, rightCloudCenterX, leftCloudEndY);
         mLeftCloudPath.transformToNewPath(mComputeMatrix, mRightCloudPath);
-
         float left = calculateRect.left + leftCloudBottomRoundRadius;
         //compute the right cloud's path bounds
         mRightCloudPath.computeBounds(calculateRect);
@@ -320,7 +277,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
         //************************compute right cloud**********************
         //compute the rect of rain...
-
         mRainRect.modify(left, top, right, (h * 3 / 4f));
         mRainClipRect.modify(0, mRainRect.top, w, mRainRect.bottom);
         mMaxTranslationX = leftCloudBottomRoundRadius / 2;
@@ -360,7 +316,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
     @Override
     public void onDraw(Component component, Canvas canvas) {
-
         canvas.save();
         canvas.clipRect(mRainClipRect);
         drawRainDrops(canvas);
@@ -373,7 +328,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         mComputeMatrix.postTranslate(mMaxTranslationX * mLeftCloudAnimatorValue, 0);
         mLeftCloudPath.transformToNewPath(mComputeMatrix, mComputePath);
         canvas.drawPath(mComputePath, mLeftCloudPaint);
-
     }
 
     /**
@@ -465,8 +419,7 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
         /**
          * Now create a random raindrop.
          * */
-        private void createRainDrop() {
-
+        private void createRainDrop() throws IllegalArgumentException {
             if (mRainDrops.size() >= mRainDropMaxNumber || mRainRect.isEmpty()) {
                 return;
             }
@@ -481,26 +434,20 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
             }
 
             mRainDropCreationTime = current;
-
             RainDrop rainDrop = obtainRainDrop();
             rainDrop.slope = mRainDropSlope;
             rainDrop.speedX = mRainDropMinSpeed + mOnlyRandom.nextFloat() * mRainDropMaxSpeed;
             rainDrop.speedY = rainDrop.speedX * Math.abs(rainDrop.slope);
-
             float rainDropLength = (float) mRainDropMinLength
                     + mOnlyRandom.nextInt(mRainDropMaxLength - mRainDropMinLength);
             double degree = Math.toDegrees(Math.atan(rainDrop.slope));
-
             rainDrop.mxLength = (float) Math.abs(Math.cos(degree * Math.PI / 180) * rainDropLength);
             rainDrop.myLength = (float) Math.abs(Math.sin(degree * Math.PI / 180) * rainDropLength);
-
             //random x coordinate
             rainDrop.mx = mRainRect.left + mOnlyRandom.nextInt((int) mRainRect.getWidth());
             //the fixed y coordinate
             rainDrop.my = mRainRect.top - rainDrop.myLength;
-
             mRainDrops.add(rainDrop);
-
         }
 
         /**
@@ -508,7 +455,6 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
          * */
         private void updateRainDropState() {
             mRemovedRainDrops.clear();
-
             for (RainDrop rainDrop : mRainDrops) {
                 if (rainDrop.my - rainDrop.myLength > mRainRect.bottom) {
                     mRemovedRainDrops.add(rainDrop);
@@ -534,21 +480,23 @@ public class RainyView extends Component implements DrawTask, EstimateSizeListen
 
         @Override
         public void run() {
-            createRainDrop();
+            try {
+                createRainDrop();
+            } catch (IllegalArgumentException exception) {
+                HiLog.error(HILOG_LABEL1, "IllegalArgumentException");
+            }
             updateRainDropState();
             mHandler.postTask(this, 20);
         }
     };
 
     private void drawRainDrops(Canvas canvas) {
-
         for (RainDrop rainDrop : mRainDrops) {
             canvas.drawLine(rainDrop.mx, rainDrop.my,
                     rainDrop.slope > 0 ? rainDrop.mx + rainDrop.mxLength : rainDrop.mx - rainDrop.mxLength,
                     rainDrop.my + rainDrop.myLength,
                     mRainPaint);
         }
-
     }
 
     /**
