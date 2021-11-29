@@ -11,9 +11,9 @@ Inspired by [samlss/RainyView](https://github.com/samlss/RainyView) - version 1.
 ## Feature
 This library provides an animation of rainy view feature.
 
-<img src="https://github.com/priyankabb153/RainyView/blob/main/screenshots/raniyview1.gif" width="256">
+<img src="screenshots/raniyview1.gif" width="256">
 
-<img src="https://github.com/priyankabb153/RainyView/blob/main/screenshots/rainyview2.gif" width="356">
+<img src="screenshots/rainyview2.gif" width="356">
 
 
 ## Dependency
@@ -31,6 +31,13 @@ This library provides an animation of rainy view feature.
 		implementation fileTree(dir: 'libs', include: ['*.har'])
 		testImplementation 'junit:junit:4.13'
 	}
+```
+3. For using rainyview from a remote repository in separate application, add the below dependencies in entry/build.gradle file.
+``` groovy
+         dependencies {
+             implementation 'dev.applibgroup:rainyview:1.0.0'  
+	         testCompile 'junit:junit:4.13'
+         }
 ```
 
 ## Usage
